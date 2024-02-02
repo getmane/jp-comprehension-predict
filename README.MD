@@ -2,6 +2,8 @@
 
 Chrome extension that allows you 
 to evaluate how many words on a web page you can understand
+
+![](C:\pnudev\jp-comprehension-predict\example-readme.png "Example (nhk web news easy)")
 ---
 ### What for? 
 `To better understand your current japanese ability vocabulary wise`

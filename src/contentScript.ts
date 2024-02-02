@@ -1,12 +1,18 @@
-getTab().then(
-    () => {
-        console.log('Successfully shown prediction');
-    },
-    (reason) => {
-        console.error(reason);
-    });
+const currentUrl = location.href;
+const jpDomainRegex = /\.jp/;
+const onlyJpSites = (await chrome.storage.local.get("onlyJp")).onlyJp;
 
-async function getTab() {
+if ((jpDomainRegex.test(currentUrl) && onlyJpSites) || !onlyJpSites) {
+    showPrediction().then(
+        () => {
+            console.log('Successfully shown prediction');
+        },
+        (reason) => {
+            console.error(reason);
+        });
+}
+
+async function showPrediction() {
     const pageContent = document.documentElement.innerText;
     // TODO: use a dictionary
     const segmenter = new Intl.Segmenter([], {granularity: 'word'});

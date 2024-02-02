@@ -1,25 +1,31 @@
 import '../styles/options.scss';
 
-const saveOptions = () => {
-    const input: HTMLElement = document.getElementById('jpdb-file')
-    if ('files' in input && input.files.length > 0) {
-        placeFileContent(input.files[0])
-    }
+const onlyJpSites = (await chrome.storage.local.get("onlyJp")).onlyJp;
+if (onlyJpSites) {
+    (<HTMLInputElement> document.getElementById('only-jp')).checked = true
 }
 
-function placeFileContent(file: Blob) {
+const saveOptions = () => {
+    const jpdbReviews = <HTMLInputElement> document.getElementById('jpdb-file')
+    const onlyJp = <HTMLInputElement> document.getElementById('only-jp')
+
+    if ('files' in jpdbReviews && jpdbReviews.files.length > 0) {
+        storeJpdbWords(jpdbReviews.files[0])
+    }
+
+    chrome.storage.local.set({ onlyJp: onlyJp.checked });
+    const status = document.getElementById('status');
+    status.textContent = 'Saved.';
+    setTimeout(() => {status.textContent = '';}, 750);
+}
+
+function storeJpdbWords(file: Blob) {
     readFileContent(file).then(fileContent => {
         const jpdb = JSON.parse(fileContent);
         const knownWords = jpdb.cards_vocabulary_jp_en.map((word: { spelling: string; }) => word.spelling);
         chrome.storage.local.set(
             { knownWords: knownWords },
-            () => {
-                const status = document.getElementById('status');
-                status.textContent = 'Saved.';
-                setTimeout(() => {
-                    status.textContent = '';
-                }, 750);
-            }
+            () => console.log('Set known words (jpdb)')
         );
     }).catch(error => console.log(error))
 }

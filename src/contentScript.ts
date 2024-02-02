@@ -1,15 +1,20 @@
-const currentUrl = location.href;
-const jpDomainRegex = /\.jp/;
-const onlyJpSites = (await chrome.storage.local.get("onlyJp")).onlyJp;
 
-if ((jpDomainRegex.test(currentUrl) && onlyJpSites) || !onlyJpSites) {
-    showPrediction().then(
-        () => {
-            console.log('Successfully shown prediction');
-        },
-        (reason) => {
-            console.error(reason);
-        });
+window.addEventListener("load", loadScript, false);
+
+async function loadScript() {
+    const currentUrl = location.href;
+    const jpDomainRegex = /\.jp/;
+    const onlyJpSites = (await chrome.storage.local.get("onlyJp")).onlyJp;
+
+    if ((jpDomainRegex.test(currentUrl) && onlyJpSites) || !onlyJpSites) {
+        showPrediction().then(
+            () => {
+                console.log('Successfully shown prediction');
+            },
+            (reason) => {
+                console.error(reason);
+            });
+    }
 }
 
 async function showPrediction() {

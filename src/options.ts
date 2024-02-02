@@ -12,11 +12,9 @@ const saveOptions = () => {
     if ('files' in jpdbReviews && jpdbReviews.files.length > 0) {
         storeJpdbWords(jpdbReviews.files[0])
     }
-
     chrome.storage.local.set({ onlyJp: onlyJp.checked });
-    const status = document.getElementById('status');
-    status.textContent = 'Saved.';
-    setTimeout(() => {status.textContent = '';}, 750);
+
+    savedNotify();
 }
 
 function storeJpdbWords(file: Blob) {
@@ -38,4 +36,13 @@ function readFileContent(file: Blob): Promise<string> {
         reader.readAsText(file)
     })
 }
+
+function savedNotify() {
+    const status = document.getElementById('status');
+    status.textContent = 'Saved.';
+    setTimeout(() => {
+        status.textContent = '';
+    }, 750);
+}
+
 document.getElementById('save').addEventListener('click', saveOptions);

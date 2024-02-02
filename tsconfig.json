@@ -4,6 +4,7 @@
     "noImplicitAny": true,
     "module": "esnext",
     "target": "es5",
+    "lib": ["es2022", "dom"],
     "allowJs": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true

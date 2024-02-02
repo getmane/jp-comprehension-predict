@@ -3,10 +3,10 @@ window.addEventListener("load", loadScript, false);
 
 async function loadScript() {
     const currentUrl = location.href;
-    const jpDomainRegex = /\.jp/;
     const onlyJpSites = (await chrome.storage.local.get("onlyJp")).onlyJp;
+    const whitelistedDomains = (await chrome.storage.local.get("whitelistedDomains")).whitelistedDomains.replace(" ", "");
 
-    if ((jpDomainRegex.test(currentUrl) && onlyJpSites) || !onlyJpSites) {
+    if (shouldShowPrediction(currentUrl, onlyJpSites, whitelistedDomains.split(","))) {
         showPrediction().then(
             () => {
                 console.log('Successfully shown prediction');
@@ -15,6 +15,12 @@ async function loadScript() {
                 console.error(reason);
             });
     }
+}
+
+function shouldShowPrediction(currentUrl: string, onlyJpSites: string, whitelistedDomains: string[]) {
+    return (currentUrl.includes(".jp") && onlyJpSites)
+        || !onlyJpSites
+        || whitelistedDomains.some(domains => currentUrl.includes(domains));
 }
 
 async function showPrediction() {
@@ -26,7 +32,6 @@ async function showPrediction() {
     const knownWords = (await chrome.storage.local.get("knownWords")).knownWords;
     const similarity = similarityPercentage(pageWords, knownWords)
 
-    console.log(pageWords)
     const container = document.createElement('div')
     container.style.position = "fixed"
     container.style.height = "auto"

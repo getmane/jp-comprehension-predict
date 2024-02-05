@@ -1,6 +1,6 @@
 import '../styles/options.scss';
 
-const whitelistedDomainsStore = (await chrome.storage.local.get("whitelistedDomains")).whitelistedDomains;
+const whitelistedDomainsStore: string = (await chrome.storage.local.get("whitelistedDomains")).whitelistedDomains;
 if (whitelistedDomainsStore) {
     (<HTMLInputElement> document.getElementById('whitelist-domains')).value = whitelistedDomainsStore
 } else {
@@ -9,8 +9,8 @@ if (whitelistedDomainsStore) {
 
 
 const saveOptions = () => {
-    const jpdbReviews = <HTMLInputElement> document.getElementById('jpdb-file')
-    const whitelistedDomains = <HTMLInputElement> document.getElementById('whitelist-domains')
+    const jpdbReviews: HTMLInputElement = <HTMLInputElement> document.getElementById('jpdb-file')
+    const whitelistedDomains: HTMLInputElement = <HTMLInputElement> document.getElementById('whitelist-domains')
 
     if ('files' in jpdbReviews && jpdbReviews.files.length > 0) {
         storeJpdbWords(jpdbReviews.files[0])
@@ -32,7 +32,7 @@ function storeJpdbWords(file: Blob) {
 }
 
 function readFileContent(file: Blob): Promise<string> {
-    const reader = new FileReader()
+    const reader: FileReader = new FileReader()
     return new Promise((resolve, reject) => {
         reader.onload = event => resolve(event.target.result)
         reader.onerror = error => reject(error)
@@ -41,7 +41,7 @@ function readFileContent(file: Blob): Promise<string> {
 }
 
 function savedNotify() {
-    const status = document.getElementById('status');
+    const status: HTMLElement = document.getElementById('status');
     status.textContent = 'Saved.';
     setTimeout(() => {
         status.textContent = '';

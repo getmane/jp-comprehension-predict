@@ -2,9 +2,12 @@
 window.addEventListener("load", loadScript, false);
 
 async function loadScript() {
-    const currentUrl = location.href;
-    const whitelistedDomains = (await chrome.storage.local.get("whitelistedDomains")).whitelistedDomains.replace(" ", "");
-
+    const currentUrl: string = location.href;
+    const whitelistedDomainsKeyStore: string = (await chrome.storage.local.get("whitelistedDomains")).whitelistedDomains
+    const whitelistedDomains: string =
+        whitelistedDomainsKeyStore
+            ? whitelistedDomainsKeyStore.replaceAll(" ", "")
+            : ".jp";
     if (shouldShowPrediction(currentUrl, whitelistedDomains.split(","))) {
         showPrediction().then(
             () => {
@@ -18,23 +21,23 @@ async function loadScript() {
 
 function shouldShowPrediction(currentUrl: string, whitelistedDomains: string[]) {
     return whitelistedDomains.length == 0
-        || whitelistedDomains.some(domains => currentUrl.includes(domains));
+        || whitelistedDomains.some(domain => currentUrl.includes(domain));
 }
 
 async function showPrediction() {
     const pageContent = document.documentElement.innerText;
     // TODO: use a dictionary
-    const segmenter = new Intl.Segmenter([], {granularity: 'word'});
-    const segmentedText = segmenter.segment(pageContent);
-    const pageWords = filterOutNonJapanese([...segmentedText].filter(s => s.isWordLike).map(s => s.segment));
-    const knownWords = (await chrome.storage.local.get("knownWords")).knownWords;
-    const comprehension = calculateComprehension(pageWords, knownWords)
+    const segmenter: Intl.Segmenter = new Intl.Segmenter([], {granularity: 'word'});
+    const segmentedText: Intl.Segments = segmenter.segment(pageContent);
+    const pageWords: string[] = filterOutNonJapanese([...segmentedText].filter(s => s.isWordLike).map(s => s.segment));
+    const knownWords: string[] = (await chrome.storage.local.get("knownWords")).knownWords;
+    const comprehension: number = calculateComprehension(pageWords, knownWords)
 
     showPredictionOnPage(comprehension * 100, pageWords.length * comprehension, pageWords);
 }
 
 function showPredictionOnPage(comprehension: number, knownWords: number, pageWords: string[]) {
-    const container = document.createElement('div')
+    const container: HTMLElement = document.createElement('div')
     container.style.position = "fixed"
     container.style.height = "auto"
     container.style.width = " 200px"

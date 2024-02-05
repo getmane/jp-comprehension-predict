@@ -1,24 +1,20 @@
 import '../styles/options.scss';
 
-const onlyJpSites = (await chrome.storage.local.get("onlyJp")).onlyJp;
 const whitelistedDomainsStore = (await chrome.storage.local.get("whitelistedDomains")).whitelistedDomains;
-if (onlyJpSites) {
-    (<HTMLInputElement> document.getElementById('only-jp')).checked = true
-}
 if (whitelistedDomainsStore) {
     (<HTMLInputElement> document.getElementById('whitelist-domains')).value = whitelistedDomainsStore
+} else {
+    (<HTMLInputElement> document.getElementById('whitelist-domains')).value = ".jp"
 }
 
 
 const saveOptions = () => {
     const jpdbReviews = <HTMLInputElement> document.getElementById('jpdb-file')
-    const onlyJp = <HTMLInputElement> document.getElementById('only-jp')
     const whitelistedDomains = <HTMLInputElement> document.getElementById('whitelist-domains')
 
     if ('files' in jpdbReviews && jpdbReviews.files.length > 0) {
         storeJpdbWords(jpdbReviews.files[0])
     }
-    chrome.storage.local.set({ onlyJp: onlyJp.checked });
     chrome.storage.local.set({ whitelistedDomains: whitelistedDomains.value });
 
     savedNotify();

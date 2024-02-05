@@ -3,10 +3,9 @@ window.addEventListener("load", loadScript, false);
 
 async function loadScript() {
     const currentUrl = location.href;
-    const onlyJpSites = (await chrome.storage.local.get("onlyJp")).onlyJp;
     const whitelistedDomains = (await chrome.storage.local.get("whitelistedDomains")).whitelistedDomains.replace(" ", "");
 
-    if (shouldShowPrediction(currentUrl, onlyJpSites, whitelistedDomains.split(","))) {
+    if (shouldShowPrediction(currentUrl, whitelistedDomains.split(","))) {
         showPrediction().then(
             () => {
                 console.log('Successfully shown prediction');
@@ -17,9 +16,8 @@ async function loadScript() {
     }
 }
 
-function shouldShowPrediction(currentUrl: string, onlyJpSites: string, whitelistedDomains: string[]) {
-    return (currentUrl.includes(".jp") && onlyJpSites)
-        || !onlyJpSites
+function shouldShowPrediction(currentUrl: string, whitelistedDomains: string[]) {
+    return whitelistedDomains.length == 0
         || whitelistedDomains.some(domains => currentUrl.includes(domains));
 }
 
@@ -28,10 +26,14 @@ async function showPrediction() {
     // TODO: use a dictionary
     const segmenter = new Intl.Segmenter([], {granularity: 'word'});
     const segmentedText = segmenter.segment(pageContent);
-    const pageWords = wordStat([...segmentedText].filter(s => s.isWordLike).map(s => s.segment));
+    const pageWords = filterOutNonJapanese([...segmentedText].filter(s => s.isWordLike).map(s => s.segment));
     const knownWords = (await chrome.storage.local.get("knownWords")).knownWords;
-    const similarity = similarityPercentage(pageWords, knownWords)
+    const comprehension = calculateComprehension(pageWords, knownWords)
 
+    showPredictionOnPage(comprehension * 100, pageWords.length * comprehension, pageWords);
+}
+
+function showPredictionOnPage(comprehension: number, knownWords: number, pageWords: string[]) {
     const container = document.createElement('div')
     container.style.position = "fixed"
     container.style.height = "auto"
@@ -43,14 +45,14 @@ async function showPrediction() {
     container.style.color = "white"
     container.style.zIndex = "2000"
     container.style.textAlign = "center"
-    container.innerHTML = "Comprehension percentage: " + String(similarity.toFixed(2)) + "%"
-        + "<br>" + "Total known words: " + String(knownWords.length)
+    container.innerHTML = "Comprehension percentage: " + String(comprehension.toFixed(2)) + "%"
+        + "<br>" + "Known words: " + String(knownWords)
         + "<br> Words on page: " + String(pageWords.length)
 
     document.body.appendChild(container)
 }
 
-function wordStat(text: string[]) {
+function filterOutNonJapanese(text: string[]) {
     return text.filter(letter => {
         return (letter > '\u3040' && letter < '\u4DBF')
             || (letter > '\u4e00' && letter < '\u9faf');
@@ -60,6 +62,6 @@ function wordStat(text: string[]) {
     }, []);
 }
 
-function similarityPercentage(wordsOnPage: string[], totalWords: string[]): number {
-    return 100 * wordsOnPage.filter(Set.prototype.has, new Set(totalWords)).length / wordsOnPage.length;
+function calculateComprehension(wordsOnPage: string[], knownWords: string[]): number {
+    return wordsOnPage.filter(Set.prototype.has, new Set(knownWords)).length / wordsOnPage.length;
 }

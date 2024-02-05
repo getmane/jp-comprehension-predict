@@ -1,5 +1,5 @@
 {
-  "name": "compherension-predict",
+  "name": "Japanese words you know counter",
   "description": "Gives you an overview of how many words on a page you know",
   "version": "0.1.0",
   "manifest_version": 3,

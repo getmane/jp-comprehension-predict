@@ -7,7 +7,6 @@ if (whitelistedDomainsStore) {
     (<HTMLInputElement> document.getElementById('whitelist-domains')).value = ".jp"
 }
 
-
 const saveOptions = () => {
     const jpdbReviews: HTMLInputElement = <HTMLInputElement> document.getElementById('jpdb-file')
     const whitelistedDomains: HTMLInputElement = <HTMLInputElement> document.getElementById('whitelist-domains')

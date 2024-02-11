@@ -27,33 +27,29 @@ function shouldShowPrediction(currentUrl: string, whitelistedDomains: string[]) 
 async function showPrediction() {
     const pageContent = document.documentElement.innerText;
     // TODO: use a dictionary
-    const segmenter: Intl.Segmenter = new Intl.Segmenter([], {granularity: 'word'});
+    const segmenter: Intl.Segmenter
+      = new Intl.Segmenter([], {granularity: 'word'});
     const segmentedText: Intl.Segments = segmenter.segment(pageContent);
     const pageWords: string[] = filterOutNonJapanese([...segmentedText]
         .filter(s => s.isWordLike).map(s => s.segment));
     const uniqueWords: Set<string> = new Set(pageWords);
 
-    const knownWords: string[] = (await chrome.storage.local.get("knownWords")).knownWords;
+    const knownWords: string[]
+      = (await chrome.storage.local.get("knownWords")).knownWords;
     const comprehension: number = calculateComprehension(pageWords, knownWords)
 
-    showPredictionOnPage(
-      comprehension * 100,
-      pageWords.length * comprehension,
-      pageWords.length,
-      uniqueWords.size
-    );
+    showPredictionOnPage(comprehension, pageWords.length, uniqueWords.size);
 }
 
 function showPredictionOnPage(
   comprehension: number,
-  knownWords: number,
   pageWords: number,
   uniqueWords: number
 ) {
     const container: HTMLElement = document.createElement('div')
     container.style.position = "fixed"
     container.style.height = "auto"
-    container.style.width = " 200px"
+    container.style.width = " 250px"
     container.style.bottom = "5px"
     container.style.right = "5px"
     container.style.border = "1px solid white"
@@ -62,10 +58,13 @@ function showPredictionOnPage(
     container.style.zIndex = "2000"
     container.style.textAlign = "center"
     container.innerHTML =
-      "Comprehension percentage: " + String(comprehension.toFixed(2)) + "%"
-        + "<br>" + "Known words: " + String(knownWords)
-        + "<br> Words on page: " + String(pageWords)
-        + "<br> Unique words on page: " + String(uniqueWords)
+      "Comprehension percentage: "
+          + String((comprehension * 100).toFixed(2)) + "%"
+      + "<br>" + "Total known page words: " + String(pageWords * comprehension)
+      + "<br> Total words on page: " + String(pageWords)
+      + "<br> Unique words on page: " + String(uniqueWords)
+      + "<br> Unique percentage: "
+            + String((uniqueWords / pageWords * 100).toFixed(2)) + "%"
 
     document.body.appendChild(container)
 }

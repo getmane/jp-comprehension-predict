@@ -29,14 +29,27 @@ async function showPrediction() {
     // TODO: use a dictionary
     const segmenter: Intl.Segmenter = new Intl.Segmenter([], {granularity: 'word'});
     const segmentedText: Intl.Segments = segmenter.segment(pageContent);
-    const pageWords: string[] = filterOutNonJapanese([...segmentedText].filter(s => s.isWordLike).map(s => s.segment));
+    const pageWords: string[] = filterOutNonJapanese([...segmentedText]
+        .filter(s => s.isWordLike).map(s => s.segment));
+    const uniqueWords: Set<string> = new Set(pageWords);
+
     const knownWords: string[] = (await chrome.storage.local.get("knownWords")).knownWords;
     const comprehension: number = calculateComprehension(pageWords, knownWords)
 
-    showPredictionOnPage(comprehension * 100, pageWords.length * comprehension, pageWords);
+    showPredictionOnPage(
+      comprehension * 100,
+      pageWords.length * comprehension,
+      pageWords.length,
+      uniqueWords.size
+    );
 }
 
-function showPredictionOnPage(comprehension: number, knownWords: number, pageWords: string[]) {
+function showPredictionOnPage(
+  comprehension: number,
+  knownWords: number,
+  pageWords: number,
+  uniqueWords: number
+) {
     const container: HTMLElement = document.createElement('div')
     container.style.position = "fixed"
     container.style.height = "auto"
@@ -48,9 +61,11 @@ function showPredictionOnPage(comprehension: number, knownWords: number, pageWor
     container.style.color = "white"
     container.style.zIndex = "2000"
     container.style.textAlign = "center"
-    container.innerHTML = "Comprehension percentage: " + String(comprehension.toFixed(2)) + "%"
+    container.innerHTML =
+      "Comprehension percentage: " + String(comprehension.toFixed(2)) + "%"
         + "<br>" + "Known words: " + String(knownWords)
-        + "<br> Words on page: " + String(pageWords.length)
+        + "<br> Words on page: " + String(pageWords)
+        + "<br> Unique words on page: " + String(uniqueWords)
 
     document.body.appendChild(container)
 }
@@ -59,12 +74,10 @@ function filterOutNonJapanese(text: string[]) {
     return text.filter(letter => {
         return (letter > '\u3040' && letter < '\u4DBF')
             || (letter > '\u4e00' && letter < '\u9faf');
-    }).reduce((a, b) => {
-        if (a.indexOf(b) < 0) a.push(b);
-        return a;
-    }, []);
+    });
 }
 
 function calculateComprehension(wordsOnPage: string[], knownWords: string[]): number {
-    return wordsOnPage.filter(Set.prototype.has, new Set(knownWords)).length / wordsOnPage.length;
+    return wordsOnPage.filter(Set.prototype.has, new Set(knownWords))
+        .length / wordsOnPage.length;
 }

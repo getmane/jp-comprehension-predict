@@ -1,6 +1,7 @@
 @import 'common.scss';
 
 .container {
+  max-width: 90vh;
   min-height: 100vh;
   display: flex;
   flex-direction: column;

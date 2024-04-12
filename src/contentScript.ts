@@ -1,6 +1,8 @@
 
 window.addEventListener("load", loadScript, false);
 
+const jpdbParseTextUrl: string = "https://jpdb.io/api/v1/parse";
+
 async function loadScript() {
     const currentUrl: string = location.href;
     const whitelistedDomainsKeyStore: string = (await chrome.storage.local.get("whitelistedDomains")).whitelistedDomains
@@ -8,8 +10,9 @@ async function loadScript() {
         whitelistedDomainsKeyStore
             ? whitelistedDomainsKeyStore.replaceAll(" ", "")
             : ".jp";
+    const jpdbApiKey = (await chrome.storage.local.get("jpdbApiKey")).jpdbApiKey
     if (shouldShowPrediction(currentUrl, whitelistedDomains.split(","))) {
-        showPrediction().then(
+        showPrediction(jpdbApiKey).then(
             () => {
                 console.log('Successfully shown prediction');
             },
@@ -24,28 +27,17 @@ function shouldShowPrediction(currentUrl: string, whitelistedDomains: string[]) 
         || whitelistedDomains.some(domain => currentUrl.includes(domain));
 }
 
-async function showPrediction() {
+async function showPrediction(jpdbApiKey: string) {
     const pageContent = document.documentElement.innerText;
-    // TODO: use a dictionary
-    const segmenter: Intl.Segmenter
-      = new Intl.Segmenter([], {granularity: 'word'});
-    const segmentedText: Intl.Segments = segmenter.segment(pageContent);
-    const pageWords: string[] = filterOutNonJapanese([...segmentedText]
-        .filter(s => s.isWordLike).map(s => s.segment));
-    const uniqueWords: Set<string> = new Set(pageWords);
+    const parsedPage = await jpdbParsePage(jpdbApiKey, pageContent);
+    const totalVocab = parsedPage.vocabulary;
+    const knownVocab = new Set(totalVocab.filter(word => word[0] !== null)); // [0] state (reviewed/not)
+    const uniqueWords: Set<string> = new Set(totalVocab);
 
-    const knownWords: string[]
-      = (await chrome.storage.local.get("knownWords")).knownWords;
-    const comprehension: number = calculateComprehension(pageWords, knownWords)
-
-    showPredictionOnPage(comprehension, pageWords.length, uniqueWords.size);
+    showPredictionOnPage(uniqueWords.size, knownVocab.size);
 }
 
-function showPredictionOnPage(
-  comprehension: number,
-  pageWords: number,
-  uniqueWords: number
-) {
+function showPredictionOnPage(pageWords: number, knownWords: number) {
     const container: HTMLElement = document.createElement('div')
     container.style.position = "fixed"
     container.style.height = "auto"
@@ -59,24 +51,29 @@ function showPredictionOnPage(
     container.style.textAlign = "center"
     container.innerHTML =
       "Comprehension percentage: "
-          + String((comprehension * 100).toFixed(2)) + "%"
-      + "<br>" + "Total known page words: " + String(pageWords * comprehension)
-      + "<br> Total words on page: " + String(pageWords)
-      + "<br> Unique words on page: " + String(uniqueWords)
-      + "<br> Unique percentage: "
-            + String((uniqueWords / pageWords * 100).toFixed(2)) + "%"
+          + String((knownWords / pageWords  * 100).toFixed(2)) + "%"
+      + "<br> Unique page words: " + String(pageWords)
+      + "<br> Known unique page words: " + String(knownWords)
 
     document.body.appendChild(container)
 }
 
-function filterOutNonJapanese(text: string[]) {
-    return text.filter(letter => {
-        return (letter > '\u3040' && letter < '\u4DBF')
-            || (letter > '\u4e00' && letter < '\u9faf');
-    });
-}
+async function jpdbParsePage(jpdbApiKey: string, pageText: string) {
+    const body = {
+        text: pageText,
+        token_fields: ["vocabulary_index","position","length","furigana"],
+        vocabulary_fields: ["card_level"]
+    };
+    const requestOptions = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${jpdbApiKey}`
+        },
+        body: JSON.stringify(body),
+    };
+    const response = await fetch(jpdbParseTextUrl, requestOptions);
 
-function calculateComprehension(wordsOnPage: string[], knownWords: string[]): number {
-    return wordsOnPage.filter(Set.prototype.has, new Set(knownWords))
-        .length / wordsOnPage.length;
+    return await response.json();
 }

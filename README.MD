@@ -7,8 +7,8 @@ to evaluate how many words on a web page you can understand
 ### What for? 
 `To better understand your current japanese ability vocabulary wise`
 
-### Where to find jpdb export file?
-`Go to settings > scroll down > Export reviews (.json)`
+### Where to find jpdb API key?
+`Go to settings > scroll down > Account information > API key`
 
 ### Anki?
 `Currently not supported, but will be for sure`

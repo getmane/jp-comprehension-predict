@@ -2,7 +2,6 @@
 
 Chrome extension that allows you 
 to evaluate how many words on a web page you can understand
-
 ![](example-readme.png "Example (nhk web news easy)")
 ---
 ### What for? 
